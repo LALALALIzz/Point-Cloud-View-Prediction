@@ -1,5 +1,5 @@
 /venv/
 /.idea/
-/.gitignore
+/.gitignore/
 /__pycache__/
 /src/__pycache__/
