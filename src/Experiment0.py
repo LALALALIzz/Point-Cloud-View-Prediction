@@ -17,7 +17,7 @@ if __name__ == '__main__':
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
                                                     'CHECKPOINTS',
-                                                    'Experiment%dmodel%dpara%id.pt'))
+                                                    'Experiment%dmodel%dpara%d.pt'))
 
     # Dataset related parameters
     dataset_name = 'njit'
@@ -25,13 +25,13 @@ if __name__ == '__main__':
     architecture = 'basic'
     observ_step = 30
     pred_step = 30
-    batch_size = 10
+    batch_size = 15
     train_index = [1]
     test_index = [1]
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 128
+    hidden_dim = 256
     num_layers = 3
     batch_first = True
     dropout = 0.2
@@ -42,7 +42,7 @@ if __name__ == '__main__':
                       dropout=dropout,
                       pred_step=pred_step)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0002)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     previous_loss = 0
     early_stop_cnter = 0
     EARLY_STOP_PATIENCE = 3
-    epoch = 1
+    epoch = 20
 
     # Result containers
     train_loss_list = []
