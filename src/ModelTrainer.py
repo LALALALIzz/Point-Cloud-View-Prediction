@@ -27,7 +27,7 @@ class ModelTrainer:
         train_loss = train_loss / counter
         return train_loss
 
-    def basic_predict(self, test_loader, test_mode):
+    def basic_predict(self, test_loader):
         self.model.eval()
         test_loss = 0
         counter = 0
@@ -78,7 +78,7 @@ class ModelTrainer:
                 dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
             loss = self.loss_func(dec_output, labels)
-            test_loss += loss.item
+            test_loss += loss.item()
             counter += 1
         test_loss = test_loss / counter
         return test_loss

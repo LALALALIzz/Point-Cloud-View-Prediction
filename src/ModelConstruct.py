@@ -27,9 +27,9 @@ class Basic_GRU(nn.Module):
         return output
 
 class Encoder(nn.Module):
-    def __init__(self, in_dim, hidden_dim, num_layers, drop_out):
+    def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Encoder, self).__init__()
-        self.encoder = nn.GRU(in_dim, hidden_dim, num_layers, batch_first=True, dropout=drop_out)
+        self.encoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
 
     def forward(self, inputs):
         enc_output, enc_state = self.encoder(inputs)
@@ -37,19 +37,19 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_dim, hidden_dim, num_layers, drop_out):
+    def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Decoder, self).__init__()
-        self.decoder = nn.GRU(in_dim, hidden_dim, num_layers, batch_first=True, dropout=drop_out)
-        self.dense = nn.Linear(hidden_dim, in_dim)
+        self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
+        self.dense = nn.Linear(hidden_dim, input_dim)
         self.tanh = nn.Tanh()
         self.elu = nn.ELU()
         self.leaky = nn.LeakyReLU()
 
     def forward(self, inputs, state):
         outputs, dec_state = self.decoder(inputs, state)
-        #outputs = self.tanh(output)
+        # outputs = self.tanh(output)
         pred = self.dense(outputs)
-        pred = self.tanh(pred)
+        pred = self.leaky(pred)
         return pred, dec_state
 
 
