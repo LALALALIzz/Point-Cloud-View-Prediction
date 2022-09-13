@@ -1,3 +1,4 @@
+import os.path
 import random
 import torch
 import torch.nn as nn
@@ -11,7 +12,7 @@ from Loss_Function import LossFunc
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
-from TestKit import TestKit
+from TestKit2 import TestKit2
 from tqdm import tqdm
 
 
@@ -27,13 +28,13 @@ def param_init(model):
 if __name__ == '__main__':
     torch.manual_seed(0)
     # Test constants
-    time_step = 30
-    pred_step = 30
+    time_step = 250
+    pred_step = 500
     batch_size = 10
     num_feature = 6
     num_hiddens = 30
     num_layers = 1
-    learn_rate = 0.001
+    learn_rate = 0.0001
     drop_out = 0
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # Model construction
@@ -45,16 +46,16 @@ if __name__ == '__main__':
     # Model optimizer and loss function
     optimizer = optim.Adam(model.parameters(), lr=learn_rate)
     criterion = nn.MSELoss()
-    # TestKit initialization
-    test_kit1 = TestKit(time_step=time_step,
-                        pred_step=pred_step,
-                        model=model,
-                        loss_func=criterion,
-                        optim=optimizer,
-                        num_feature=num_feature,
-                        batch_size=batch_size,
-                        random=0,
-                        device=device)
+    # TestKit2 initialization
+    test_kit1 = TestKit2(time_step=time_step,
+                         pred_step=pred_step,
+                         model=model,
+                         loss_func=criterion,
+                         optim=optimizer,
+                         num_feature=num_feature,
+                         batch_size=batch_size,
+                         random=0,
+                         device=device)
 
     epoch_num = 100
     train_loss = []
@@ -64,8 +65,8 @@ if __name__ == '__main__':
 
     for epoch in tqdm(range(1, epoch_num + 1)):
         #print('Epoch %d:' % epoch)
-        train_loss.append(test_kit1.train(train_mode='general', training_amt=20, train_index=[13, 17, 24]))
-        test_loss.append(test_kit1.predict(test_mode='manual', test_amt=0, test_index=[3, 15]))
+        train_loss.append(test_kit1.train(train_mode='general', training_amt=14, train_index=[13, 17, 24]))
+        test_loss.append(test_kit1.predict(test_mode='manual', test_amt=0, test_index=[15]))
 
     train_loss = np.array(train_loss)
 
@@ -76,3 +77,4 @@ if __name__ == '__main__':
     plt.plot(epoch, train_loss, 'b')
     plt.plot(epoch, test_loss, 'r')
     plt.show()
+    print()

@@ -58,7 +58,7 @@ class BaselineModel:
         else:
             series_index = np.arange(1, series_amt + 1)
         for index in series_index:
-            temp_data = pandas.read_csv("./Data/P_%d/H1_nav.csv" % index).to_numpy()
+            temp_data = pandas.read_csv("../Data/P_%d/H1_nav.csv" % index).to_numpy()
             temp_data = temp_data[:, 5:8]
             if len(temp_data.shape) < 2:
                 temp_data = temp_data[:, None]
@@ -128,10 +128,6 @@ class BaselineModel:
                     #print(dec_output.shape)
                 dec_output = self.angular_decoder(dec_output.to('cpu')).detach().numpy()
                 labels = self.angular_decoder(labels.to('cpu')).detach().numpy()
-                print(dec_output)
-                print('-----------')
-                print(labels)
-                print('**********')
 
                 loss = dec_output - labels
                 loss = np.abs(loss)
@@ -193,11 +189,11 @@ if __name__ == '__main__':
     # Test constants
     time_step = 30
     pred_step = 150
-    batch_size = 10
+    batch_size = 15
     num_feature = 6
     num_hiddens = 30
     num_layers = 1
-    learn_rate = 0.001
+    learn_rate = 0.01
     drop_out = 0
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # Model construction
@@ -209,7 +205,7 @@ if __name__ == '__main__':
     # Model optimizer and loss function
     optimizer = optim.Adam(model.parameters(), lr=learn_rate)
     criterion = nn.MSELoss()
-    # TestKit initialization
+    # TestKit2 initialization
     test_kit1 = BaselineModel(time_step=time_step,
                               pred_step=pred_step,
                               model=model,
@@ -227,8 +223,8 @@ if __name__ == '__main__':
     #pred_num = 30
     for epoch in tqdm(range(1, epoch_num + 1)):
         # print('Epoch %d:' % epoch)
-        train_loss.append(test_kit1.train(train_mode='manual', training_amt=0, train_index=[2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27]))
-        test_loss.append(test_kit1.predict(test_mode='manual', test_amt=0, test_index=[1, 3, 14, 15, 26]))
+        train_loss.append(test_kit1.train(train_mode='general', training_amt=25, train_index=[2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27]))
+        test_loss.append(test_kit1.predict(test_mode='manual', test_amt=0, test_index=[26]))
 
     train_loss = np.array(train_loss)
 
