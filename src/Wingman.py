@@ -78,7 +78,7 @@ class Helper:
                 if tmp_max[i] > ymax[i]:
                     ymax[i] = tmp_max[i]
             output_list.append(output[0, :, :].detach().numpy())
-            label_list.append(np.concatenate((labels[0, :, :].detach().numpy(), inputs[0, :, :].detach().numpy()), axis=0))
+            label_list.append(np.concatenate((inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
         return output_list, label_list, ymin, ymax
 
     @staticmethod
@@ -114,7 +114,7 @@ class Helper:
                 if tmp_max[i] > ymax[i]:
                     ymax[i] = tmp_max[i]
             output_list.append(dec_output[0, :, :].detach().numpy())
-            label_list.append(np.concatenate((labels[0, :, :].detach().numpy(), encoder_inputs[0, :, :].detach().numpy()), axis=0))
+            label_list.append(np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
         return output_list, label_list, ymin, ymax
 
 

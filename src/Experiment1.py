@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # Experiment configuration
     EXPERIMENT_ID = 2
     MODEL_ID = 1
-    para_id = 0
+    para_id = 4
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
                                                     'CHECKPOINTS',
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # Model related parameters
     input_dim = 3
     hidden_dim = 512
-    num_layers = 3
+    num_layers = 2
     batch_first = True
     dropout = 0
     encoder = Encoder(input_dim=input_dim,
