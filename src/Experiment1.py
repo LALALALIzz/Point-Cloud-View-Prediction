@@ -108,13 +108,14 @@ if __name__ == '__main__':
     # Result visualization
     result_visual = ResultVisualization(mode=mode,
                                         architecture=architecture,
+                                        observ_step=observ_step,
                                         pred_step=pred_step)
     saved_model.load_state_dict(torch.load(MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id)))
     saved_model.eval()
-    output_list, label_list = Helper.encdec_predict_test(saved_model, test_loader, pred_step)
+    output_list, label_list, ymin, ymax = Helper.encdec_predict_test(saved_model, test_loader, pred_step)
     result_visual.loss_plot(train_loss=train_loss_list, test_loss=test_loss_list)
     for output, label in zip(output_list, label_list):
-        result_visual.data_plot(groundtruth=label, prediction=output, zoomInRange=0, zoomInBias=0)
+        result_visual.data_plot(groundtruth=label, prediction=output, zoomInRange=0, zoomInBias=0, ymin=ymin, ymax=ymax)
 
 
 
