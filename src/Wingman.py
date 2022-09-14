@@ -68,10 +68,10 @@ class Helper:
         for inputs, labels in test_loader:
             output = model(inputs)
             in_flatten = torch.flatten(inputs, start_dim=0, end_dim=1)
-            out_flatten = torch.flatten(output,start_dim=0, end_dim=1)
-            data_concate = torch.cat((in_flatten,out_flatten), 0)
-            tmp_min = torch.min(data_concate, dim=0).values.detach().numpy()
-            tmp_max = torch.max(data_concate, dim=0).values.detach().numpy()
+            # out_flatten = torch.flatten(output,start_dim=0, end_dim=1)
+            # data_concate = torch.cat((in_flatten,out_flatten), 0)
+            tmp_min = torch.min(in_flatten, dim=0).values.detach().numpy()
+            tmp_max = torch.max(in_flatten, dim=0).values.detach().numpy()
             for i in range(len(ymax)):
                 if tmp_min[i] < ymin[i]:
                     ymin[i] = tmp_min[i]
@@ -104,10 +104,10 @@ class Helper:
                 dec_pred, dec_state = model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
             in_flatten = torch.flatten(encoder_inputs, start_dim=0, end_dim=1)
-            out_flatten = torch.flatten(dec_output,start_dim=0, end_dim=1)
-            data_concate = torch.cat((in_flatten, out_flatten), 0)
-            tmp_min = torch.min(data_concate, dim=0).values.detach().numpy()
-            tmp_max = torch.max(data_concate, dim=0).values.detach().numpy()
+            # out_flatten = torch.flatten(dec_output,start_dim=0, end_dim=1)
+            # data_concate = torch.cat((in_flatten, out_flatten), 0)
+            tmp_min = torch.min(in_flatten, dim=0).values.detach().numpy()
+            tmp_max = torch.max(in_flatten, dim=0).values.detach().numpy()
             for i in range(len(ymax)):
                 if tmp_min[i] < ymin[i]:
                     ymin[i] = tmp_min[i]

@@ -12,8 +12,8 @@ from Wingman import Helper
 if __name__ == '__main__':
     # Experiment configuration
     EXPERIMENT_ID = 1
-    MODEL_ID = 1
-    para_id = 0
+    MODEL_ID = 0
+    para_id = 4
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
                                                     'CHECKPOINTS',
@@ -23,16 +23,16 @@ if __name__ == '__main__':
     dataset_name = 'njit'
     mode = 'position'
     architecture = 'basic'
-    observ_step = 30
-    pred_step = 30
-    batch_size = 15
+    observ_step = 250
+    pred_step = 250
+    batch_size = 1
     train_index = [1]
     test_index = [1]
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 128
-    num_layers = 1
+    hidden_dim = 512
+    num_layers = 2
     batch_first = True
     dropout = 0
     model = Basic_GRU(input_dim=input_dim,
@@ -42,15 +42,15 @@ if __name__ == '__main__':
                       dropout=dropout,
                       pred_step=pred_step)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.0002)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
     # Training parameters
     previous_loss = 0
     early_stop_cnter = 0
-    EARLY_STOP_PATIENCE = 3
-    epoch = 100
+    EARLY_STOP_PATIENCE = 4
+    epoch = 300
 
     # Result containers
     train_loss_list = []
