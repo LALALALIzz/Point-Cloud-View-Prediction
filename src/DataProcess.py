@@ -112,7 +112,7 @@ class DataProcess:
                                   shuffle=True)
         test_loader = DataLoader(testset,
                                  batch_size=self.batch_size,
-                                 shuffle=True)
+                                 shuffle=False)
         return train_loader, test_loader
 
 

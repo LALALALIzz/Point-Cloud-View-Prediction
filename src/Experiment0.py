@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 32
+    hidden_dim = 128
     num_layers = 1
     batch_first = True
     dropout = 0
