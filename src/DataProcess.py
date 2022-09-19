@@ -19,7 +19,8 @@ class DataProcess:
         self.separation = separation
         self.FEATURE_NUM = 3
 
-    def normalization(self, dataset):
+
+    def Normalization(self, dataset):
         for i in range(dataset.shape[1]):
             dataset[:, i] = (dataset[:, i] - np.mean(dataset[:, i])) / np.std(dataset[:, i])
 
@@ -29,7 +30,8 @@ class DataProcess:
         X = []
         Y = []
         dataset = pd.read_csv(csv_path).to_numpy()
-        self.normalization(dataset)
+        self.Normalization(dataset)
+
         # Retrieve data from csv file based on dataset name and mode
         # dataset name in {umd, njit}
         # mode in {position, angle}
