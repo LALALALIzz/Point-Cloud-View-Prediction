@@ -11,8 +11,10 @@ class Basic_GRU(nn.Module):
                           batch_first=batch_first,
                           dropout=dropout)
         self.pred_step = pred_step
-        self.length_extender = nn.Linear(1, pred_step)
-        self.feature_compressor = nn.Linear(hidden_dim, input_dim)
+        self.length_extender = nn.Linear(1, hidden_dim)
+        self.dense1 = nn.Linear(hidden_dim, pred_step)
+        self.dense2 = nn.Linear(hidden_dim, hidden_dim//2)
+        self.feature_compressor = nn.Linear(hidden_dim//2, input_dim)
         self.activation = nn.LeakyReLU()
 
     def forward(self, input):
@@ -21,7 +23,12 @@ class Basic_GRU(nn.Module):
         context_vec = context_vec[:, None]
         temp = torch.permute(context_vec, (0, 2, 1))
         temp_extended = self.length_extender(temp)
+        temp_extended = self.activation(temp_extended)
+        temp_extended = self.dense1(temp_extended)
+        temp_extended = self.activation(temp_extended)
         extended_context = torch.permute(temp_extended, (0, 2, 1))
+        extended_context = self.dense2(extended_context)
+        extended_context = self.activation(extended_context)
         output = self.feature_compressor(extended_context)
 
         return output
