@@ -21,9 +21,6 @@ class DataProcess:
 
     def Normalization(self, dataset):
         for i in range(dataset.shape[1]):
-            print(i)
-            print("mean", np.mean(dataset[:, i]))
-            print("std", np.std(dataset[:, i]))
             dataset[:, i] = (dataset[:, i] - np.mean(dataset[:, i])) / np.std(dataset[:, i])
 
     def dataset_generation(self, csv_path):
