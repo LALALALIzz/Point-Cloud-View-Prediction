@@ -31,10 +31,10 @@ if __name__ == '__main__':
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 128
-    num_layers = 1
+    hidden_dim = 256
+    num_layers = 2
     batch_first = True
-    dropout = 0
+    dropout = 0.2
     encoder = Encoder(input_dim=input_dim,
                       hidden_dim=hidden_dim,
                       num_layers=num_layers,
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                       dropout=dropout)
     model = EncoderDecoder(encoder, decoder)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=0.00005)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     previous_loss = 0
     early_stop_cnter = 0
     EARLY_STOP_PATIENCE = 4
-    epoch = 100
+    epoch = 20
 
     # Result containers
     train_loss_list = []
