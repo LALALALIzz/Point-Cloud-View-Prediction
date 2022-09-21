@@ -20,7 +20,7 @@ class DataProcess:
         self.FEATURE_NUM = 3
 
 
-    def Normalization(self, dataset):
+    def Normalization2(self, dataset):
         for i in range(dataset.shape[1]):
             dataset[:, i] = (dataset[:, i] - np.mean(dataset[:, i])) / np.std(dataset[:, i])
 
