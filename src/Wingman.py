@@ -84,13 +84,11 @@ class Helper:
     @staticmethod
     def encdec_predict_test(model, test_loader, pred_step):
         model.eval()
-
         output_list = []
         label_list = []
         ymin = [1000, 1000, 1000]
         ymax = [-1000, -1000, -1000]
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        # model.to(device)
+
         """
         inputs shape is (batch, in_len, 3)
         output shape is (batch, out_len, 3)
@@ -99,14 +97,12 @@ class Helper:
         data_concate shape is (batch*in_len+batch*out_len, 3)
         """
         for encoder_inputs, (decoder_input, labels) in test_loader:
-            # encoder_inputs, decoder_input, labels = encoder_inputs.to(device), decoder_input.to(device), labels.to(device)
             enc_output, enc_state = model.encoder(encoder_inputs)
             dec_output, dec_state = model.decoder(encoder_inputs[:, -1, None], enc_state)
             dec_pred = dec_output
             for _ in range(pred_step - 1):
                 dec_pred, dec_state = model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
-
             in_flatten = torch.flatten(encoder_inputs, start_dim=0, end_dim=1)
             # out_flatten = torch.flatten(dec_output,start_dim=0, end_dim=1)
             # data_concate = torch.cat((in_flatten, out_flatten), 0)
@@ -117,11 +113,9 @@ class Helper:
                     ymin[i] = tmp_min[i]
                 if tmp_max[i] > ymax[i]:
                     ymax[i] = tmp_max[i]
-
-            output_list.append(dec_output[0, :, :].cpu().detach().numpy())
+            output_list.append(dec_output[0, :, :].detach().numpy())
             label_list.append(np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
-        return output_list, label_list , ymin, ymax
-
+        return output_list, label_list, ymin, ymax
 
 
 

@@ -1,6 +1,3 @@
-from typing import List
-import numpy as np
-import matplotlib.pyplot as plt
 from DataProcess import DataProcess
 from ModelTrainer import ModelTrainer
 from ModelConstruct import Basic_GRU, Encoder, Decoder, EncoderDecoder
@@ -15,8 +12,8 @@ from Wingman import Helper
 if __name__ == '__main__':
     # Experiment configuration
     EXPERIMENT_ID = 2
-    MODEL_ID = 1
-    para_id = 3
+    MODEL_ID = 2
+    para_id = 1
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
                                                     'CHECKPOINTS',
@@ -34,10 +31,10 @@ if __name__ == '__main__':
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 128
-    num_layers = 3
+    hidden_dim = 512
+    num_layers = 1
     batch_first = True
-    dropout = 0.1
+    dropout = 0
     encoder = Encoder(input_dim=input_dim,
                       hidden_dim=hidden_dim,
                       num_layers=num_layers,
@@ -50,7 +47,7 @@ if __name__ == '__main__':
                       dropout=dropout)
     model = EncoderDecoder(encoder, decoder)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.00001)
+    optimizer = optim.Adam(model.parameters(), lr=0.000001)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
@@ -59,8 +56,6 @@ if __name__ == '__main__':
     early_stop_cnter = 0
     EARLY_STOP_PATIENCE = 4
     epoch = 200
-
-
 
     # Result containers
     train_loss_list = []
@@ -117,23 +112,10 @@ if __name__ == '__main__':
                                         pred_step=pred_step)
     saved_model.load_state_dict(torch.load(MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id)))
     saved_model.eval()
-    '''
-    output_list, label_list, ymin, ymax = Helper.encdec_predict_test(saved_model, test_loader, pred_step)
-    for output, label in zip(output_list, label_list):
-        # print(label.shape)
-        x = np.arange(observ_step, observ_step + pred_step)
-        y = np.arange(observ_step + pred_step)
-        plt.plot(x, output, 'o')
-        plt.plot(y, label, 'b')
-        plt.show()
-    plt.plot(np.arange(len(train_loss_list)), train_loss_list, 'b')
-    plt.plot(np.arange(len(test_loss_list)), test_loss_list, 'r')
-    plt.show()
-    '''
     output_list, label_list, ymin, ymax = Helper.encdec_predict_test(saved_model, test_loader, pred_step)
     result_visual.loss_plot(train_loss=train_loss_list, test_loss=test_loss_list)
     for output, label in zip(output_list, label_list):
-        result_visual.data_plot(groundtruth=label, prediction=output, zoomInRange=0, zoomInBias=0)
+        result_visual.data_plot(groundtruth=label, prediction=output, zoomInRange=0, zoomInBias=0, ymin=ymin, ymax=ymax)
 
 
 
