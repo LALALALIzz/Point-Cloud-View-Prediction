@@ -37,8 +37,16 @@ class Encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Encoder, self).__init__()
         self.encoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
+        # self.mlp = Basic_MLP(in_channels=input_dim, hidden_channels=hidden_dim, output_channels=32)
+        # self.num_layers = num_layers
+        # self.hidden_dim = hidden_dim
+        # self.batch_size = batch_size
 
     def forward(self, inputs):
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # h_0 = torch.randn((self.num_layers, inputs.shape[0], self.hidden_dim)).to(device)
+        # c_0 = torch.randn(self.num_layers, 4, self.hidden_dim).to(device)
+        # inputs = self.mlp(inputs)
         enc_output, enc_state = self.encoder(inputs)
         return enc_output, enc_state
 
@@ -46,18 +54,19 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Decoder, self).__init__()
-        self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.dense1 = nn.Linear(hidden_dim, hidden_dim // 2)
-        self.dense2 = nn.Linear(hidden_dim // 2, input_dim)
-        self.tanh = nn.Tanh()
-        self.elu = nn.ELU()
-        self.leaky = nn.LeakyReLU()
+        self.gru = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
+        # self.mlp1 = Basic_MLP(in_channels=input_dim, hidden_channels=hidden_dim, output_channels=32)
+        # self.mlp2 = Basic_MLP(in_channels=hidden_dim, hidden_channels=hidden_dim, output_channels=input_dim)
+        self.dense = nn.Linear(hidden_dim, input_dim)
+        self.relu = nn.ReLU()
 
     def forward(self, inputs, state):
-        outputs, dec_state = self.decoder(inputs, state)
+        # inputs = self.mlp1(inputs)
+        outputs, dec_state = self.gru(inputs, state)
         # outputs = self.tanh(output)
-        pred = self.dense1(outputs)
-        pred = self.dense2(pred)
+        # pred = self.relu(outputs)
+        pred = self.dense(outputs)
+
         return pred, dec_state
 
 
@@ -87,4 +96,20 @@ class Transformer(nn.Module):
         output = torch.permute(dense_output, (0, 2, 1))
 
         return output
+
+class Basic_MLP(nn.Module):
+    def __init__(self, in_channels, hidden_channels, output_channels):
+        super(Basic_MLP, self).__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(in_channels, hidden_channels),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_channels, hidden_channels),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_channels, output_channels)
+        )
+
+    def forward(self, input):
+        output = self.mlp(input)
+        return output
+
 

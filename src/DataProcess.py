@@ -23,13 +23,17 @@ class DataProcess:
         for i in range(dataset.shape[1]):
             dataset[:, i] = (dataset[:, i] - np.mean(dataset[:, i])) / np.std(dataset[:, i])
 
+    def Normalization2(self, dataset):
+        for i in range(dataset.shape[1]):
+            dataset[:, i] = (dataset[:, i] - np.min(dataset[:, i])) / (np.max(dataset[:, i]) - np.min(dataset[:, i]))
+
     def dataset_generation(self, csv_path):
         # Initialize input, label
         # Read csv file
         X = []
         Y = []
         dataset = pd.read_csv(csv_path).to_numpy()
-        self.Normalization(dataset)
+        # self.Normalization(dataset)
         # Retrieve data from csv file based on dataset name and mode
         # dataset name in {umd, njit}
         # mode in {position, angle}
@@ -63,14 +67,20 @@ class DataProcess:
         # Add a dummy dimension if dataset is 1-d array
         if len(dataset.shape) < 2:
             dataset = dataset[:, None]
+
+        # Normalization
+        self.Normalization(dataset)
+
         # Get sequence start indices
         num_samples = (len(dataset) - self.pred_step - self.observ_step) // self.observ_step
         initial_indices = np.arange(0, num_samples * self.observ_step, self.observ_step)
         # Helper function to separate input and label
         def data(pos, observ_step):
-            return dataset[pos: pos + observ_step]
+            # print(dataset[pos: pos + observ_step].shape)
+            return dataset[pos: pos + observ_step, :]
         def label(pos, pred_step):
-            return dataset[pos: pos + pred_step]
+            # print(dataset[pos: pos + pred_step].shape)
+            return dataset[pos: pos + pred_step, :]
         # Fill X with input sequence
         # Fill Y with label sequence
         for i in initial_indices:  # range(len(dataset) - self.pred_step - self.time_step):

@@ -28,7 +28,6 @@ class EncDecDataset(Dataset):
     def __getitem__(self, index):
         # Load data and get label
         X = self.inputs[index]
-
         x_T = X[-1]
         x_T = x_T[None, :]
 
