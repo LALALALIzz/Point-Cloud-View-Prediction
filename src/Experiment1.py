@@ -12,7 +12,7 @@ from Wingman import Helper
 if __name__ == '__main__':
     # Experiment configuration
     EXPERIMENT_ID = 2
-    MODEL_ID = 2
+    MODEL_ID = 1
     para_id = 1
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
@@ -25,13 +25,13 @@ if __name__ == '__main__':
     architecture = 'enc_dec'
     observ_step = 250
     pred_step = 250
-    batch_size = 8
+    batch_size = 4
     train_index = [1]
     test_index = [1]
 
     # Model related parameters
     input_dim = 3
-    hidden_dim = 512
+    hidden_dim = 128
     num_layers = 1
     batch_first = True
     dropout = 0
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                       dropout=dropout)
     model = EncoderDecoder(encoder, decoder)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.000001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     previous_loss = 0
     early_stop_cnter = 0
     EARLY_STOP_PATIENCE = 4
-    epoch = 200
+    epoch = 100
 
     # Result containers
     train_loss_list = []

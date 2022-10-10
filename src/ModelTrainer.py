@@ -48,7 +48,7 @@ class ModelTrainer:
             teach_enforce = random.random()
             if teach_enforce >= 0.5:
                 enc_output, enc_state = self.model.encoder(encoder_inputs)
-                dec_output, dec_state = self.model.decoder(encoder_inputs[:, -1, None], enc_state)
+                dec_output, dec_state = self.model.decoder(encoder_inputs[:, -2, None], enc_state)
                 dec_pred = dec_output
                 for _ in range(self.pred_step - 1):
                     dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
@@ -72,7 +72,7 @@ class ModelTrainer:
             encoder_inputs, decoder_input, labels = encoder_inputs.to(self.device), decoder_input.to(
                 self.device), labels.to(self.device)
             enc_output, enc_state = self.model.encoder(encoder_inputs)
-            dec_output, dec_state = self.model.decoder(encoder_inputs[:, -1, None], enc_state)
+            dec_output, dec_state = self.model.decoder(encoder_inputs[:, -2, None], enc_state)
             dec_pred = dec_output
             for _ in range(self.pred_step - 1):
                 dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)

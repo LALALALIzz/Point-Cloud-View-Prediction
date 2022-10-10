@@ -47,8 +47,7 @@ class Decoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Decoder, self).__init__()
         self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.dense1 = nn.Linear(hidden_dim, hidden_dim // 2)
-        self.dense2 = nn.Linear(hidden_dim // 2, input_dim)
+        self.dense = nn.Linear(hidden_dim, input_dim)
         self.tanh = nn.Tanh()
         self.elu = nn.ELU()
         self.leaky = nn.LeakyReLU()
@@ -56,8 +55,8 @@ class Decoder(nn.Module):
     def forward(self, inputs, state):
         outputs, dec_state = self.decoder(inputs, state)
         # outputs = self.tanh(output)
-        pred = self.dense1(outputs)
-        pred = self.dense2(pred)
+        pred = self.dense(outputs)
+        pred = self.leaky(pred)
         return pred, dec_state
 
 

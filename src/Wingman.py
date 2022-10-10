@@ -98,7 +98,7 @@ class Helper:
         """
         for encoder_inputs, (decoder_input, labels) in test_loader:
             enc_output, enc_state = model.encoder(encoder_inputs)
-            dec_output, dec_state = model.decoder(encoder_inputs[:, -1, None], enc_state)
+            dec_output, dec_state = model.decoder(encoder_inputs[:, -2, None], enc_state)
             dec_pred = dec_output
             for _ in range(pred_step - 1):
                 dec_pred, dec_state = model.decoder(dec_pred, dec_state)
