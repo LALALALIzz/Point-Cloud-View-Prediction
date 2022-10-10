@@ -34,7 +34,7 @@ class ResultVisualization:
     We limit the range of y-aixs of the graph according to the min and max of the whole sequence.
     ymin and ymax should be an array in size of 3
     """
-    def data_plot(self, groundtruth, prediction, zoomInRange, zoomInBias, ymin, ymax):
+    def data_plot(self, groundtruth, prediction, zoomInRange, zoomInBias, mean, std):
         plt.figure()
         if zoomInRange != 0:
             groundtruth_index = np.arange(zoomInBias, self.observ_step + zoomInBias + zoomInRange)
@@ -46,11 +46,11 @@ class ResultVisualization:
             subtitles = ["pitch", "yaw", "roll"]
         elif self.mode == "position":
             subtitles = ["x-axis", "y-axis", "z-axis"]
-        """
-        Result Denormalization
-        """
-        # groundtruth =groundtruth * std + mean
-        # prediction = prediction * std + mean
+
+        # Data denormalization
+
+        groundtruth = groundtruth * std + mean
+        prediction = prediction * std + mean
 
         Ylabel = 'degree' if self.mode == "Angular" else 'unit'
         plt.title("%s prediction for %s in period of %ds" % (self.architecture, self.mode, self.pred_step))

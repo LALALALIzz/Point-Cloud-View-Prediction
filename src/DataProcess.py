@@ -4,8 +4,9 @@ from torch.utils.data import DataLoader
 from torch.utils.data import ConcatDataset
 import numpy as np
 from Wingman import Helper
-from CustomDataset import BasicDataset, EncDecDataset
+from CustomDataset import BasicDataset, EncDecDataset, EncDecDataset2
 import os
+import scipy.signal as ss
 
 class DataProcess:
 
@@ -18,8 +19,15 @@ class DataProcess:
         self.batch_size = batch_size
         self.separation = separation
         self.FEATURE_NUM = 3
-        self.mean = 0
-        self.std = 1
+        self.mean = None
+        self.std = None
+
+    def Decimator(self, dataset):
+        decimated = []
+        for i in range(dataset.shape[1]):
+            decimated.append(ss.decimate(dataset[:, i], 5))
+        decimated = np.stack(decimated, axis=1)
+        return decimated
 
     def Normalization(self, dataset):
         mean = []
@@ -40,6 +48,9 @@ class DataProcess:
             x_wn[:, i] = (X[:, i] - head) / std
             y_wn[:, i] = (Y[:, i] - head) / std
         return x_wn, y_wn
+
+        self.mean = mean
+        self.std = std
 
     def dataset_generation(self, csv_path):
         # Initialize input, label
@@ -81,6 +92,10 @@ class DataProcess:
         # Add a dummy dimension if dataset is 1-d array
         if len(dataset.shape) < 2:
             dataset = dataset[:, None]
+
+        # dataset = self.Decimator(dataset)
+        self.Normalization(dataset)
+
         # Get sequence start indices
         num_samples = (len(dataset) - self.pred_step - self.observ_step+1)
         initial_indices = np.arange(0, num_samples)
@@ -107,7 +122,7 @@ class DataProcess:
         if self.architecture == 'basic':
             my_set = BasicDataset(X, Y)
         elif self.architecture == 'enc_dec':
-            my_set = EncDecDataset(X, Y)
+            my_set = EncDecDataset2(X, Y)
         else:
             raise Exception("Architecture should be in {'basic', 'enc_dec'}")
         # print(len(my_set))

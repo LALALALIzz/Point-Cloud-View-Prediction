@@ -82,7 +82,7 @@ class Helper:
         return output_list, label_list, ymin, ymax
 
     @staticmethod
-    def encdec_predict_test(model, test_loader, pred_step):
+    def encdec_predict_test(model, test_loader, pred_step, num_layers, hidden_dim):
         model.eval()
         output_list = []
         label_list = []
@@ -97,11 +97,55 @@ class Helper:
         data_concate shape is (batch*in_len+batch*out_len, 3)
         """
         for encoder_inputs, (decoder_input, labels) in test_loader:
-            enc_output, enc_state = model.encoder(encoder_inputs)
+            h_0 = torch.zeros((num_layers, encoder_inputs.shape[0], hidden_dim))
+            enc_output, enc_state = model.encoder(encoder_inputs, h_0)
             dec_output, dec_state = model.decoder(encoder_inputs[:, -1, None], enc_state)
             dec_pred = dec_output
             for _ in range(pred_step - 1):
                 dec_pred, dec_state = model.decoder(dec_pred, dec_state)
+                dec_output = torch.cat((dec_output, dec_pred), 1)
+            '''
+            in_flatten = torch.flatten(encoder_inputs, start_dim=0, end_dim=1)
+            # out_flatten = torch.flatten(dec_output,start_dim=0, end_dim=1)
+            # data_concate = torch.cat((in_flatten, out_flatten), 0)
+            tmp_min = torch.min(in_flatten, dim=0).values.detach().numpy()
+            tmp_max = torch.max(in_flatten, dim=0).values.detach().numpy()
+            for i in range(len(ymax)):
+                if tmp_min[i] < ymin[i]:
+                    ymin[i] = tmp_min[i]
+                if tmp_max[i] > ymax[i]:
+                    ymax[i] = tmp_max[i]
+            '''
+            output_list.append(dec_output[0, :, :].detach().numpy())
+            temp_label = np.concatenate((encoder_inputs[0, :, :].detach().numpy(), decoder_input[0, 0, None, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0)
+            label_list.append(temp_label)
+        return output_list, label_list
+
+    @staticmethod
+    def encdec_predict_test2(model, test_loader, pred_step, num_layers, hidden_dim):
+        model.eval()
+        output_list = []
+        label_list = []
+        ymin = [1000, 1000, 1000]
+        ymax = [-1000, -1000, -1000]
+
+        """
+        inputs shape is (batch, in_len, 3)
+        output shape is (batch, out_len, 3)
+        in_flatten shape is (batch*in_len, 3)
+        out_flatten shape is (batch*out_len, 3)
+        data_concate shape is (batch*in_len+batch*out_len, 3)
+        """
+        for encoder_inputs, (decoder_input, labels) in test_loader:
+            h_0 = torch.zeros((num_layers, encoder_inputs.shape[0], hidden_dim))
+            h_0_com = torch.zeros((1, encoder_inputs.shape[0], 3))
+            enc_output, enc_state = model.encoder(encoder_inputs, h_0)
+            dec_output, dec_state = model.decoder(encoder_inputs[:, -1, None], enc_state)
+            dec_output = model.compressor(dec_output)
+            dec_pred = dec_output
+            for _ in range(pred_step - 1):
+                dec_pred, dec_state = model.decoder(dec_pred, dec_state)
+                dec_pred = model.compressor(dec_pred)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
             in_flatten = torch.flatten(encoder_inputs, start_dim=0, end_dim=1)
             # out_flatten = torch.flatten(dec_output,start_dim=0, end_dim=1)
@@ -114,7 +158,8 @@ class Helper:
                 if tmp_max[i] > ymax[i]:
                     ymax[i] = tmp_max[i]
             output_list.append(dec_output[0, :, :].detach().numpy())
-            label_list.append(np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
+            label_list.append(
+                np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
         return output_list, label_list, ymin, ymax
 
 
