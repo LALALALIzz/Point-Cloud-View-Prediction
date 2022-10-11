@@ -4,9 +4,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data import ConcatDataset
 import numpy as np
 from Wingman import Helper
-from CustomDataset import BasicDataset, EncDecDataset, EncDecDataset2
+from CustomDataset import BasicDataset, EncDecDataset
 import os
-import scipy.signal as ss
 
 class DataProcess:
 
@@ -19,15 +18,8 @@ class DataProcess:
         self.batch_size = batch_size
         self.separation = separation
         self.FEATURE_NUM = 3
-        self.mean = None
-        self.std = None
-
-    def Decimator(self, dataset):
-        decimated = []
-        for i in range(dataset.shape[1]):
-            decimated.append(ss.decimate(dataset[:, i], 5))
-        decimated = np.stack(decimated, axis=1)
-        return decimated
+        self.mean = 0
+        self.std = 1
 
     def Normalization(self, dataset):
         mean = []
@@ -48,9 +40,6 @@ class DataProcess:
             x_wn[:, i] = (X[:, i] - head) / std
             y_wn[:, i] = (Y[:, i] - head) / std
         return x_wn, y_wn
-
-        self.mean = mean
-        self.std = std
 
     def dataset_generation(self, csv_path):
         # Initialize input, label
@@ -77,7 +66,7 @@ class DataProcess:
                 raise Exception("Mode should be in {position, angle}")
         elif self.dataset_name == 'njit':
             if self.mode == 'position':
-                dataset = dataset[:5000, :3]
+                dataset = dataset[:, :3]
                 if self.separation is not None:
                     dataset = dataset[:, self.separation]
             elif self.mode == 'angle':
@@ -92,10 +81,6 @@ class DataProcess:
         # Add a dummy dimension if dataset is 1-d array
         if len(dataset.shape) < 2:
             dataset = dataset[:, None]
-
-        # dataset = self.Decimator(dataset)
-        self.Normalization(dataset)
-
         # Get sequence start indices
         num_samples = (len(dataset) - self.pred_step - self.observ_step+1)
         initial_indices = np.arange(0, num_samples)
@@ -122,7 +107,7 @@ class DataProcess:
         if self.architecture == 'basic':
             my_set = BasicDataset(X, Y)
         elif self.architecture == 'enc_dec':
-            my_set = EncDecDataset2(X, Y)
+            my_set = EncDecDataset(X, Y)
         else:
             raise Exception("Architecture should be in {'basic', 'enc_dec'}")
         # print(len(my_set))
@@ -134,7 +119,7 @@ class DataProcess:
         if self.dataset_name == 'umd':
             csv_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'Data', 'P_%d', 'H1_nav.csv'))
         elif self.dataset_name == 'njit':
-            csv_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'NJIT', 'node%dmobility.csv'))
+            csv_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'NJIT_DownSample', 'node%ddownsample.csv'))
         else:
             raise Exception("Dataset name should be in {umd, njit}")
         # Concatenate all sub-datasets

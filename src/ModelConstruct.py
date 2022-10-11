@@ -37,11 +37,9 @@ class Encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Encoder, self).__init__()
         self.encoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.hidden_dim = hidden_dim
-        self.num_layers = num_layers
 
-    def forward(self, inputs, h_0):
-        enc_output, enc_state = self.encoder(inputs, h_0)
+    def forward(self, inputs):
+        enc_output, enc_state = self.encoder(inputs)
         return enc_output, enc_state
 
 
@@ -49,47 +47,19 @@ class Decoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
         super(Decoder, self).__init__()
         self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.dense = nn.Linear(hidden_dim, input_dim)
+        self.dense1 = nn.Linear(hidden_dim, hidden_dim // 2)
+        self.dense2 = nn.Linear(hidden_dim // 2, input_dim)
+        self.tanh = nn.Tanh()
+        self.elu = nn.ELU()
+        self.leaky = nn.LeakyReLU()
 
     def forward(self, inputs, state):
         outputs, dec_state = self.decoder(inputs, state)
         # outputs = self.tanh(output)
-        pred = self.dense(outputs)
+        pred = self.dense1(outputs)
+        pred = self.dense2(pred)
         return pred, dec_state
 
-class Decoder2(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
-        super(Decoder2, self).__init__()
-        self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.dense = nn.Linear(hidden_dim, input_dim)
-
-    def forward(self, inputs, state):
-        outputs, dec_state = self.decoder(inputs, state)
-        # outputs = self.tanh(output)
-        # pred = self.dense(outputs)
-        return outputs, dec_state
-
-
-class Compressor(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        super(Compressor, self).__init__()
-        self.gru_compressor = nn.GRU(input_size=input_dim, hidden_size=hidden_dim, num_layers=1, batch_first=True)
-
-    def forward(self, inputs):
-        output, _ = self.gru_compressor(inputs)
-        return output
-
-class MLPDecoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers, batch_first, dropout):
-        super(MLPDecoder, self).__init__()
-        self.decoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
-        self.mlp = MLP(hidden_dim, input_dim)
-
-    def forward(self, inputs, state):
-        outputs, dec_state = self.decoder(inputs, state)
-        # outputs = self.tanh(output)
-        pred = self.mlp(outputs)
-        return pred, dec_state
 
 class EncoderDecoder(nn.Module):
     def __init__(self, encoder, decoder):
@@ -97,24 +67,11 @@ class EncoderDecoder(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, encoder_input, h_0, decoder_input):
-        _, enc_state = self.encoder(encoder_input, h_0)
+    def forward(self, encoder_input, decoder_input):
+        _, enc_state = self.encoder(encoder_input)
         pred, dec_state = self.decoder(decoder_input, enc_state)
 
         return pred, dec_state
-
-class EncoderDecoderCompressor(nn.Module):
-    def __init__(self, encoder, decoder, compressor):
-        super(EncoderDecoderCompressor, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-        self.compressor = compressor
-
-    def forward(self, encoder_input, h_0, decoder_input):
-        _, enc_state = self.encoder(encoder_input, h_0)
-        pred, dec_state = self.decoder(decoder_input, enc_state)
-        pred = self.compressor(pred)
-        return pred
 
 class Transformer(nn.Module):
     def __init__(self, num_features, num_layers, num_head, observ_step, pred_step):
@@ -129,20 +86,5 @@ class Transformer(nn.Module):
         dense_output = self.dense(changed_output)
         output = torch.permute(dense_output, (0, 2, 1))
 
-        return output
-
-class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(MLP, self).__init__()
-        self.layer1 = nn.Linear(input_dim, input_dim // 2)
-        self.layer2 = nn.Linear(input_dim // 2, input_dim // 4)
-        self.layer3 = nn.Linear(input_dim // 4, input_dim // 8)
-        self.layer4 = nn.Linear(input_dim // 8, output_dim)
-
-    def forward(self, input):
-        output = self.layer1(input)
-        output = self.layer2(output)
-        output = self.layer3(output)
-        output = self.layer4(output)
         return output
 
