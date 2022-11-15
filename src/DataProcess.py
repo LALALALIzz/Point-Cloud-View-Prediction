@@ -2,9 +2,10 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import ConcatDataset
+import torch.utils.data as data
 import numpy as np
 from Wingman import Helper
-from CustomDataset import BasicDataset, EncDecDataset
+from CustomDataset import *
 import os
 
 class DataProcess:
@@ -39,6 +40,18 @@ class DataProcess:
             std = np.std(X[:, i])
             x_wn[:, i] = (X[:, i] - head) / std
             y_wn[:, i] = (Y[:, i] - head) / std
+        return x_wn, y_wn
+
+    def Window_normalization2(self, X, Y):
+        x_wn = np.zeros((X.shape[0], X.shape[1]))
+        y_wn = np.zeros((Y.shape[0], Y.shape[1]))
+        for i in range(X.shape[1]):
+            min = np.min(X[:, i])
+            max = np.max(X[:, i])
+            std = np.std(X[:, i])
+            # print(max, min)
+            x_wn[:, i] = (X[:, i] - min) / (max - min)
+            y_wn[:, i] = (Y[:, i] - min) / (max - min)
         return x_wn, y_wn
 
     def dataset_generation(self, csv_path):
@@ -92,7 +105,7 @@ class DataProcess:
         # Fill X with input sequence
         # Fill Y with label sequence
         for i in initial_indices:  # range(len(dataset) - self.pred_step - self.time_step):
-            x_wn, y_wn = self.Window_normalization(data(i, self.observ_step), label(i + self.observ_step, self.pred_step))
+            x_wn, y_wn = self.Window_normalization(data(i, self.observ_step), label(i + self.observ_step, self.observ_step))
             X.append(x_wn)
             Y.append(y_wn)
         # Generate different dataset according to achitecture and separation
@@ -103,17 +116,17 @@ class DataProcess:
         else:
             feature_num = self.FEATURE_NUM
         X = torch.tensor(np.array(X, dtype='float32').reshape((len(X), self.observ_step, feature_num)))
-        Y = torch.tensor(np.array(Y, dtype='float32').reshape((len(Y), self.pred_step, feature_num)))
+        Y = torch.tensor(np.array(Y, dtype='float32').reshape((len(Y), self.observ_step, feature_num)))
         if self.architecture == 'basic':
             my_set = BasicDataset(X, Y)
         elif self.architecture == 'enc_dec':
-            my_set = EncDecDataset(X, Y)
+            my_set = EncDecDataset6(X, Y)
         else:
             raise Exception("Architecture should be in {'basic', 'enc_dec'}")
         # print(len(my_set))
         return my_set
 
-    def dataloader_generation(self, train_index, test_index):
+    def dataloader_generation(self, train_index, test_index, valid_ratio):
         trainset_list = []
         testset_list = []
         if self.dataset_name == 'umd':
@@ -122,22 +135,31 @@ class DataProcess:
             csv_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'NJIT_DownSample', 'node%ddownsample.csv'))
         else:
             raise Exception("Dataset name should be in {umd, njit}")
-        # Concatenate all sub-datasets
+        # Concatenate training sub-datasets
         for index in train_index:
             trainset_path = csv_path % index
             trainset_list.append(self.dataset_generation(trainset_path))
         trainset = ConcatDataset(trainset_list)
+        # Split validation dataset
+        train_examples = int(len(trainset) * valid_ratio)
+        valid_examples = len(trainset) - train_examples
+        trainset, validset = data.random_split(trainset, [train_examples, valid_examples])
+        # Concatenate testing sub-datasets
         for index in test_index:
             testset_path = csv_path % index
             testset_list.append(self.dataset_generation(testset_path))
         testset = ConcatDataset(testset_list)
+        # Create data loaders
         train_loader = DataLoader(trainset,
+                                  batch_size=self.batch_size,
+                                  shuffle=True)
+        valid_loader = DataLoader(validset,
                                   batch_size=self.batch_size,
                                   shuffle=True)
         test_loader = DataLoader(testset,
                                  batch_size=self.batch_size,
                                  shuffle=False)
-        return train_loader, test_loader
+        return train_loader, valid_loader, test_loader
 
 
 

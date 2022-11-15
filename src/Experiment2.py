@@ -1,6 +1,6 @@
 from DataProcess import DataProcess
 from ModelTrainer import ModelTrainer
-from ModelConstruct import Basic_GRU, Encoder, Decoder, MLPDecoder, EncoderDecoder
+from ModelConstruct import Basic_GRU, Encoder2, Decoder, MLPDecoder, EncoderDecoder2
 import torch.nn as nn
 import torch.optim as optim
 import torch
@@ -11,9 +11,9 @@ from Wingman import Helper
 
 if __name__ == '__main__':
     # Experiment configuration
-    EXPERIMENT_ID = 9
+    EXPERIMENT_ID = 10
     MODEL_ID = 2
-    para_id = 2
+    para_id = 1
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                     '..',
                                                     'CHECKPOINTS',
@@ -24,10 +24,10 @@ if __name__ == '__main__':
     mode = 'position'
     architecture = 'enc_dec'
     observ_step = 50
-    pred_step = 60
+    pred_step = 50
     batch_size = 1024
-    train_index = [1]
-    test_index = [1]
+    train_index = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+    test_index = [16]
 
     # Model related parameters
     input_dim = 3
@@ -35,41 +35,42 @@ if __name__ == '__main__':
     num_layers = 2
     batch_first = True
     dropout = 0
-    encoder = Encoder(input_dim=input_dim,
-                      hidden_dim=hidden_dim,
-                      num_layers=num_layers,
-                      batch_first=batch_first,
-                      dropout=dropout)
+    encoder = Encoder2(input_dim=input_dim,
+                       hidden_dim=hidden_dim,
+                       num_layers=num_layers,
+                       batch_first=batch_first,
+                       dropout=dropout)
     decoder = Decoder(input_dim=input_dim,
                       hidden_dim=hidden_dim,
                       num_layers=num_layers,
                       batch_first=batch_first,
                       dropout=dropout)
-    model = EncoderDecoder(encoder, decoder)
+    model = EncoderDecoder2(encoder, decoder)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=0.00005)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
-    model.apply(Helper.weight_init)
 
     # Training parameters
-    previous_loss = float('inf')
-    epoch = 300
+    previous_loss = 0
+    early_stop_cnter = 0
+    EARLY_STOP_PATIENCE = 4
+    epoch = 200
 
     # Result containers
     train_loss_list = []
     test_loss_list = []
-    saved_encoder = Encoder(input_dim=input_dim,
-                            hidden_dim=hidden_dim,
-                            num_layers=num_layers,
-                            batch_first=batch_first,
-                            dropout=dropout)
+    saved_encoder = Encoder2(input_dim=input_dim,
+                             hidden_dim=hidden_dim,
+                             num_layers=num_layers,
+                             batch_first=batch_first,
+                             dropout=dropout)
     saved_decoder = Decoder(input_dim=input_dim,
                             hidden_dim=hidden_dim,
                             num_layers=num_layers,
                             batch_first=batch_first,
                             dropout=dropout)
-    saved_model = EncoderDecoder(saved_encoder, saved_decoder)
+    saved_model = EncoderDecoder2(saved_encoder, saved_decoder)
 
     # Data process
     exp_process = DataProcess(dataset_name=dataset_name,
@@ -92,13 +93,19 @@ if __name__ == '__main__':
                                hidden_dim=hidden_dim)
 
     for epoch in tqdm(range(epoch)):
-        train_loss = exp_trainer.enc_dec_train(train_loader=train_loader)
+        train_loss = exp_trainer.enc_dec_train2(train_loader=train_loader)
         test_loss = exp_trainer.enc_dec_predict(test_loader=test_loader)
-        if test_loss < previous_loss:
-            torch.save(model.state_dict(), MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id))
+        if test_loss > previous_loss:
+            early_stop_cnter += 1
+            if early_stop_cnter >= EARLY_STOP_PATIENCE:
+                break
+        else:
+            early_stop_cnter = 0
         previous_loss = test_loss
         train_loss_list.append(train_loss)
         test_loss_list.append(test_loss)
+
+    torch.save(model.state_dict(), MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id))
 
     # Result visualization
     result_visual = ResultVisualization(mode=mode,
