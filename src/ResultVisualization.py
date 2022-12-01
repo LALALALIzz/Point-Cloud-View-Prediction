@@ -38,7 +38,7 @@ class ResultVisualization:
         plt.figure()
         if zoomInRange != 0:
             groundtruth_index = np.arange(zoomInBias, self.observ_step + zoomInBias + zoomInRange)
-            pred_index = np.arange(self.observ_step + zoomInBias, self.observ_step + zoomInBias + zoomInRange)
+            pred_index = np.arange(self.observ_step + zoomInBias, self.pred_step + zoomInBias + zoomInRange)
         else:
             groundtruth_index = np.arange(0, self.observ_step + self.pred_step)
             pred_index = np.arange(self.observ_step, self.observ_step + self.pred_step)

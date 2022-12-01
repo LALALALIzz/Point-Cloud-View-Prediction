@@ -105,7 +105,7 @@ class DataProcess:
         # Fill X with input sequence
         # Fill Y with label sequence
         for i in initial_indices:  # range(len(dataset) - self.pred_step - self.time_step):
-            x_wn, y_wn = self.Window_normalization(data(i, self.observ_step), label(i + self.observ_step, self.observ_step))
+            x_wn, y_wn = self.Window_normalization(data(i, self.observ_step), label(i + self.observ_step, self.pred_step))
             X.append(x_wn)
             Y.append(y_wn)
         # Generate different dataset according to achitecture and separation
@@ -116,7 +116,7 @@ class DataProcess:
         else:
             feature_num = self.FEATURE_NUM
         X = torch.tensor(np.array(X, dtype='float32').reshape((len(X), self.observ_step, feature_num)))
-        Y = torch.tensor(np.array(Y, dtype='float32').reshape((len(Y), self.observ_step, feature_num)))
+        Y = torch.tensor(np.array(Y, dtype='float32').reshape((len(Y), self.pred_step, feature_num)))
         if self.architecture == 'basic':
             my_set = BasicDataset(X, Y)
         elif self.architecture == 'enc_dec':
@@ -126,9 +126,10 @@ class DataProcess:
         # print(len(my_set))
         return my_set
 
-    def dataloader_generation(self, train_index, test_index, valid_ratio):
+    def dataloader_generation(self, train_index, test_index, valid_ratio=0, validate_index=None):
         trainset_list = []
         testset_list = []
+        validset_list = []
         if self.dataset_name == 'umd':
             csv_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'Data', 'P_%d', 'H1_nav.csv'))
         elif self.dataset_name == 'njit':
@@ -141,9 +142,18 @@ class DataProcess:
             trainset_list.append(self.dataset_generation(trainset_path))
         trainset = ConcatDataset(trainset_list)
         # Split validation dataset
-        train_examples = int(len(trainset) * valid_ratio)
-        valid_examples = len(trainset) - train_examples
-        trainset, validset = data.random_split(trainset, [train_examples, valid_examples])
+        if validate_index:
+            for index in train_index:
+                validate_path = csv_path % index
+                validset_list.append(self.dataset_generation(validate_path))
+            validset = ConcatDataset(trainset_list)
+        else:
+            if valid_ratio:
+                train_examples = int(len(trainset) * valid_ratio)
+                valid_examples = len(trainset) - train_examples
+                trainset, validset = data.random_split(trainset, [train_examples, valid_examples])
+            else:
+                raise Exception("Either give validate index or valid ratio!!")
         # Concatenate testing sub-datasets
         for index in test_index:
             testset_path = csv_path % index

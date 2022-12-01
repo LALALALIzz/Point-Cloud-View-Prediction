@@ -11,7 +11,7 @@ from Wingman import Helper
 
 if __name__ == '__main__':
     # Experiment configuration
-    EXPERIMENT_ID = 17
+    EXPERIMENT_ID = 18
     MODEL_ID = 2
     para_id = 1
     MODEL_SAVE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),
@@ -26,9 +26,9 @@ if __name__ == '__main__':
     observ_step = 50
     pred_step = 50
     batch_size = 512
-    train_index = [1]
-    valid_index = [1]
-    test_index = [1]
+    train_index = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+    valid_index = [6]
+    test_index = [12]
     valid_ratio = 0.9
     # Model related parameters
     input_dim = 3
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     train_loader, valid_loader, test_loader = exp_process.dataloader_generation(train_index=train_index,
                                                                                 test_index=test_index,
                                                                                 valid_ratio=valid_ratio)
-    '''
+
     # Model Training
     enc_trainer = ModelTrainer(model=encoder,
                                loss_func=loss_func,
@@ -93,7 +93,6 @@ if __name__ == '__main__':
                                pred_step=pred_step,
                                num_layers=num_layers,
                                hidden_dim=hidden_dim)
-
     print("Encoder is training...")
     for epoch in tqdm(range(encoder_epoches)):
         enc_train_loss = enc_trainer.encoder_train(train_loader)
@@ -118,7 +117,6 @@ if __name__ == '__main__':
     model = EncoderDecoder(encoder, decoder)
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     model.to(device)
-
     model_trainer = ModelTrainer(model=model,
                                  loss_func=loss_func,
                                  optimizer=optimizer,
@@ -126,14 +124,14 @@ if __name__ == '__main__':
                                  pred_step=pred_step,
                                  num_layers=num_layers,
                                  hidden_dim=hidden_dim)
-    
+    '''
     for param in model.encoder.parameters():
         param.requires_grad = False
-    
+    '''
     previous_loss = float('inf')
     print("Decoder is training...")
     for epoch in tqdm(range(decoder_epoches)):
-        train_loss = model_trainer.decoder_train5(train_loader=train_loader)
+        train_loss = model_trainer.decoder_train(train_loader=train_loader)
         valid_loss = model_trainer.enc_dec_predict4(test_loader=valid_loader)
         if valid_loss < previous_loss:
             torch.save(model.state_dict(), MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id))
@@ -143,7 +141,7 @@ if __name__ == '__main__':
         valid_loss_list.append(valid_loss)
 
     print("Decoder is trained.")
-    '''
+
     # Result visualization
     result_visual = ResultVisualization(mode=mode,
                                         architecture=architecture,
@@ -152,7 +150,7 @@ if __name__ == '__main__':
     print("Model is predicting...")
     saved_model.load_state_dict(torch.load(MODEL_SAVE_PATH % (EXPERIMENT_ID, MODEL_ID, para_id)))
     saved_model.eval()
-    output_list, enc_output_list, label_list = Helper.encdec_predict_test5(saved_model, train_loader, pred_step, num_layers, hidden_dim)
+    output_list, enc_output_list, label_list = Helper.encdec_predict_test5(saved_model, test_loader, pred_step, num_layers, hidden_dim)
     result_visual.loss_plot(train_loss=enc_train_loss_list, test_loss=enc_valid_loss_list)
     result_visual.loss_plot(train_loss=train_loss_list, test_loss=valid_loss_list)
     for (output, enc_output), label in zip(zip(output_list, enc_output_list), label_list):

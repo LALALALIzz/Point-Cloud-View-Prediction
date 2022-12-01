@@ -270,7 +270,8 @@ class Helper:
         """
         for encoder_inputs, (_, _, labels) in test_loader:
             decoder_inputs = torch.mean(input=encoder_inputs, dim=1, keepdim=True)
-            decoder_inputs = decoder_inputs.repeat(1, encoder_inputs.shape[1], 1)
+            decoder_inputs = decoder_inputs.repeat(1, labels.shape[1], 1)
+            print(labels.shape)
             # inputs, decoder_inputs, labels = inputs.to(self.device), decoder_inputs.to(self.device), labels.to(self.device)
             enc_output, enc_state = model.encoder(encoder_inputs)
             dec_output, dec_state = model.decoder(decoder_inputs, enc_state)

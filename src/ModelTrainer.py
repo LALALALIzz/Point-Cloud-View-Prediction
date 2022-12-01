@@ -197,16 +197,12 @@ class ModelTrainer:
         counter = 0
         for inputs, (_, dec_inputs, labels) in train_loader:
             inputs, dec_inputs, labels = inputs.to(self.device), dec_inputs.to(self.device), labels.to(self.device)
-            h_0 = torch.zeros((self.num_layers, inputs.shape[0], self.hidden_dim))
-            h_0 = h_0.to(self.device)
             enc_output, enc_state = self.model.encoder(inputs)#, h_0)
-            dec_output, dec_state = self.model.decoder(dec_inputs, enc_state)
-            '''
+            dec_output, dec_state = self.model.decoder(dec_inputs[:, 0, :].unsqueeze(dim=1), enc_state)
             dec_pred = dec_output.clone()
             for _ in range(self.pred_step - 1):
                 dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
-            '''
             loss = self.loss_func(dec_output, labels)
             self.optimizer.zero_grad()
             loss.backward()
@@ -242,7 +238,7 @@ class ModelTrainer:
         counter = 0
         for inputs, (_, _, labels) in train_loader:
             decoder_inputs = torch.mean(input=inputs, dim=1, keepdim=True)
-            decoder_inputs = decoder_inputs.repeat(1, inputs.shape[1], 1)
+            decoder_inputs = decoder_inputs.repeat(1, labels.shape[1], 1)
             inputs, decoder_inputs, labels = inputs.to(self.device), decoder_inputs.to(self.device), labels.to(self.device)
             enc_output, enc_state = self.model.encoder(inputs)
             dec_output, dec_state = self.model.decoder(decoder_inputs, enc_state)
@@ -267,6 +263,31 @@ class ModelTrainer:
             inputs, decoder_inputs, labels = inputs.to(self.device), decoder_inputs.to(self.device), labels.to(self.device)
             enc_output, enc_state = self.model.encoder(inputs)
             dec_output, dec_state = self.model.decoder(decoder_inputs, enc_state)
+            loss = self.loss_func(dec_output, labels)
+            self.optimizer.zero_grad()
+            loss.backward()
+            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1)
+            self.optimizer.step()
+            train_loss += loss.item()
+            counter += 1
+        train_loss = train_loss / counter
+        return train_loss
+
+    # Week 10
+    def decoder_train5(self, train_loader):
+        self.model.train()
+        train_loss = 0
+        counter = 0
+        for inputs, (_, dec_inputs, labels) in train_loader:
+            inputs, dec_inputs, labels = inputs.to(self.device), dec_inputs.to(self.device), labels.to(self.device)
+            enc_output, enc_state = self.model.encoder(inputs)
+            dec_input = dec_inputs[:, 0, :].detach().unsqueeze(dim=1)
+            dec_output, dec_state = self.model.decoder(dec_input, enc_state)
+            dec_pred = dec_output.clone().detach()
+            for _ in range(self.pred_step - 1):
+                dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
+                dec_output = torch.cat((dec_output, dec_pred), 1)
+                dec_pred = dec_pred.detach()
             loss = self.loss_func(dec_output, labels)
             self.optimizer.zero_grad()
             loss.backward()
@@ -368,7 +389,7 @@ class ModelTrainer:
         counter = 0
         for inputs, (_, _, labels) in test_loader:
             decoder_inputs = torch.mean(input=inputs, dim=1, keepdim=True)
-            decoder_inputs = decoder_inputs.repeat(1, inputs.shape[1], 1)
+            decoder_inputs = decoder_inputs.repeat(1, labels.shape[1], 1)
             inputs, decoder_inputs, labels = inputs.to(self.device), decoder_inputs.to(self.device), labels.to(
                 self.device)
             enc_output, enc_state = self.model.encoder(inputs)

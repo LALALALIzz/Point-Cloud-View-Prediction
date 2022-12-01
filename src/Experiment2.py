@@ -55,7 +55,7 @@ if __name__ == '__main__':
     previous_loss = 0
     early_stop_cnter = 0
     EARLY_STOP_PATIENCE = 4
-    epoch = 200
+    epoch = 1
 
     # Result containers
     train_loss_list = []
@@ -80,8 +80,8 @@ if __name__ == '__main__':
                               pred_step=pred_step,
                               batch_size=batch_size)
 
-    train_loader, test_loader = exp_process.dataloader_generation(train_index=train_index,
-                                                                  test_index=test_index)
+    train_loader, valid_loader, test_loader = exp_process.dataloader_generation(train_index=train_index,
+                                                                  test_index=test_index, valid_ratio=0.9)
 
     # Model Training
     exp_trainer = ModelTrainer(model=model,
