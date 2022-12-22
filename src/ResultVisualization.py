@@ -97,6 +97,7 @@ class ResultVisualization:
         # groundtruth =groundtruth * std + mean
         # prediction = prediction * std + mean
 
+
         Ylabel = 'degree' if self.mode == "Angular" else 'unit'
         plt.title("%s prediction for %s in period of %ds" % (self.architecture, self.mode, self.pred_step))
         plt.subplot(3, 1, 1)

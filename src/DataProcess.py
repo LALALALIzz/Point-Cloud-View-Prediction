@@ -143,10 +143,10 @@ class DataProcess:
         trainset = ConcatDataset(trainset_list)
         # Split validation dataset
         if validate_index:
-            for index in train_index:
+            for index in validate_index:
                 validate_path = csv_path % index
                 validset_list.append(self.dataset_generation(validate_path))
-            validset = ConcatDataset(trainset_list)
+            validset = ConcatDataset(validset_list)
         else:
             if valid_ratio:
                 train_examples = int(len(trainset) * valid_ratio)
@@ -162,10 +162,10 @@ class DataProcess:
         # Create data loaders
         train_loader = DataLoader(trainset,
                                   batch_size=self.batch_size,
-                                  shuffle=True)
+                                  shuffle=False)
         valid_loader = DataLoader(validset,
                                   batch_size=self.batch_size,
-                                  shuffle=True)
+                                  shuffle=False)
         test_loader = DataLoader(testset,
                                  batch_size=self.batch_size,
                                  shuffle=False)

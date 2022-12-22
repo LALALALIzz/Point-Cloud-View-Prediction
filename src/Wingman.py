@@ -235,6 +235,9 @@ class Helper:
         output_list = []
         enc_output_list = []
         label_list = []
+        test_loss = 0
+        counter = 0
+        loss_func = nn.MSELoss()
         """
         inputs shape is (batch, in_len, 3)
         output shape is (batch, out_len, 3)
@@ -249,10 +252,15 @@ class Helper:
             for _ in range(pred_step - 1):
                 dec_pred, dec_state = model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
+            loss = loss_func(dec_output, labels)
+            test_loss += loss.item()
+            counter += 1
             output_list.append(dec_output[0, :, :].detach().numpy())
             enc_output_list.append(enc_output[0, :, :].detach().numpy())
             label_list.append(
                 np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
+        test_loss = test_loss / counter
+        print(test_loss)
         return output_list, enc_output_list, label_list
 
     @staticmethod
@@ -261,6 +269,9 @@ class Helper:
         output_list = []
         enc_output_list = []
         label_list = []
+        loss_func = nn.MSELoss()
+        test_loss = 0
+        counter = 0
         """
         inputs shape is (batch, in_len, 3)
         output shape is (batch, out_len, 3)
@@ -271,14 +282,18 @@ class Helper:
         for encoder_inputs, (_, _, labels) in test_loader:
             decoder_inputs = torch.mean(input=encoder_inputs, dim=1, keepdim=True)
             decoder_inputs = decoder_inputs.repeat(1, labels.shape[1], 1)
-            print(labels.shape)
             # inputs, decoder_inputs, labels = inputs.to(self.device), decoder_inputs.to(self.device), labels.to(self.device)
             enc_output, enc_state = model.encoder(encoder_inputs)
             dec_output, dec_state = model.decoder(decoder_inputs, enc_state)
+            loss = loss_func(dec_output, labels)
+            test_loss += loss.item()
+            counter += 1
             output_list.append(dec_output[0, :, :].detach().numpy())
             enc_output_list.append(enc_output[0, :, :].detach().numpy())
             label_list.append(
                 np.concatenate((encoder_inputs[0, :, :].detach().numpy(), labels[0, :, :].detach().numpy()), axis=0))
+        test_loss = test_loss / counter
+        print(test_loss)
         return output_list, enc_output_list, label_list
 
 

@@ -38,8 +38,8 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.encoder = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=batch_first, dropout=dropout)
 
-    def forward(self, inputs, h_0):
-        enc_output, enc_state = self.encoder(inputs, h_0)
+    def forward(self, inputs):
+        enc_output, enc_state = self.encoder(inputs)
         return enc_output, enc_state
 
 class Encoder2(nn.Module):
@@ -126,8 +126,8 @@ class EncoderDecoder(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, encoder_input, h_0, decoder_input):
-        _, enc_state = self.encoder(encoder_input, h_0)
+    def forward(self, encoder_input, decoder_input):
+        _, enc_state = self.encoder(encoder_input)
         pred, dec_state = self.decoder(decoder_input, enc_state)
 
         return pred, dec_state

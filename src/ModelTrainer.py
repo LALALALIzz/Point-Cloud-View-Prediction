@@ -45,20 +45,20 @@ class ModelTrainer:
         self.model.train()
         train_loss = 0
         counter = 0
-        for encoder_inputs, (decoder_inputs, labels) in train_loader:
+        for encoder_inputs, (_, decoder_inputs, labels) in train_loader:
             encoder_inputs, decoder_inputs, labels = encoder_inputs.to(self.device), decoder_inputs.to(self.device), labels.to(self.device)
             h_0 = torch.zeros((self.num_layers, encoder_inputs.shape[0], self.hidden_dim))
             h_0 = h_0.to(self.device)
             teach_enforce = 0.7
             if teach_enforce >= 0.5:
-                enc_output, enc_state = self.model.encoder(encoder_inputs, h_0)
-                dec_output, dec_state = self.model.decoder(encoder_inputs[:, -10, None], enc_state)
+                enc_output, enc_state = self.model.encoder(encoder_inputs)
+                dec_output, dec_state = self.model.decoder(encoder_inputs[:, -1, None], enc_state)
                 dec_pred = dec_output.clone()
                 for _ in range(self.pred_step - 1):
                     dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
                     dec_output = torch.cat((dec_output, dec_pred), 1)
             else:
-                dec_output, _ = self.model(encoder_inputs, h_0, decoder_inputs)
+                dec_output, _ = self.model(encoder_inputs, decoder_inputs)
             loss = self.loss_func(dec_output, labels)
             self.optimizer.zero_grad()
             loss.backward()
@@ -281,13 +281,13 @@ class ModelTrainer:
         for inputs, (_, dec_inputs, labels) in train_loader:
             inputs, dec_inputs, labels = inputs.to(self.device), dec_inputs.to(self.device), labels.to(self.device)
             enc_output, enc_state = self.model.encoder(inputs)
-            dec_input = dec_inputs[:, 0, :].detach().unsqueeze(dim=1)
+            dec_input = inputs[:, -1, :].detach().unsqueeze(dim=1)
             dec_output, dec_state = self.model.decoder(dec_input, enc_state)
             dec_pred = dec_output.clone().detach()
             for _ in range(self.pred_step - 1):
                 dec_pred, dec_state = self.model.decoder(dec_pred, dec_state)
                 dec_output = torch.cat((dec_output, dec_pred), 1)
-                dec_pred = dec_pred.detach()
+                dec_pred = dec_pred.clone().detach()
             loss = self.loss_func(dec_output, labels)
             self.optimizer.zero_grad()
             loss.backward()

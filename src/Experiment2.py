@@ -27,7 +27,8 @@ if __name__ == '__main__':
     pred_step = 50
     batch_size = 1024
     train_index = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
-    test_index = [16]
+    valid_index = [6]
+    test_index = [12]
 
     # Model related parameters
     input_dim = 3
@@ -47,14 +48,12 @@ if __name__ == '__main__':
                       dropout=dropout)
     model = EncoderDecoder2(encoder, decoder)
     loss_func = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.00005)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
 
     # Training parameters
-    previous_loss = 0
-    early_stop_cnter = 0
-    EARLY_STOP_PATIENCE = 4
+    previous_loss = float('inf')
     epoch = 1
 
     # Result containers
